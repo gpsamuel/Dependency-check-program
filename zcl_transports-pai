@@ -1,0 +1,20 @@
+  METHOD pai.
+
+    CASE iv_okcode.
+
+      WHEN 'EXECUTE'.
+        CALL METHOD me->query_data
+          EXPORTING
+            it_transports = it_transports
+            it_users      = it_users.
+
+      WHEN 'DEPEND'.
+        CALL METHOD me->get_dependencies_selected.
+
+      WHEN 'BACK' OR 'EXIT' OR 'CANCEL'.
+        LEAVE PROGRAM.
+
+    ENDCASE.
+
+
+  ENDMETHOD.
