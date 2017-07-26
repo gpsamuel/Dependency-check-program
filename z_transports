@@ -1,0 +1,205 @@
+REPORT  z_transports.
+
+"==============================================================================
+"Constant declarations
+"==============================================================================
+CONSTANTS:
+
+  gcv_rfcdes      TYPE fieldname      VALUE 'RFCDEST',
+  gcv_s_rfcdes    TYPE dynfnam        VALUE 'p_rfcdes',
+  gcv_rfcdestitle TYPE char10         VALUE 'RFC Source',   "#EC NOTEXT
+  gcv_value_org   TYPE c              VALUE 'S'.
+"==============================================================================
+
+DATA:
+  gv_trkorr         TYPE trkorr,
+  gv_user           TYPE as4user,
+  gv_outstanding    TYPE char1,
+  go_container      TYPE REF TO cl_gui_custom_container,
+  go_container_dest TYPE REF TO cl_gui_custom_container,
+  okcode            TYPE syucomm,
+  gv_okcode         TYPE syucomm,
+  go_transports     TYPE REF TO zcl_transports,
+  go_err            TYPE REF TO cx_root,
+  gv_err            TYPE string,
+  gt_rfclist        TYPE zrfcdest_tt.
+
+"==============================================================================
+"Selection Screen
+"==============================================================================
+SELECTION-SCREEN BEGIN OF SCREEN 1001 AS SUBSCREEN.
+
+SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE text-001 .
+
+SELECTION-SCREEN SKIP 1.
+
+SELECT-OPTIONS: s_trkorr  FOR gv_trkorr.
+SELECT-OPTIONS: s_user    FOR gv_user.
+
+SELECTION-SCREEN SKIP 1.
+
+PARAMETERS:     p_out    AS CHECKBOX USER-COMMAND out.
+
+PARAMETERS:     p_alv    AS CHECKBOX USER-COMMAND alv DEFAULT 'X' MODIF ID g1.
+
+PARAMETERS:     p_sta    AS CHECKBOX USER-COMMAND sta.
+
+
+SELECTION-SCREEN END OF BLOCK b1.
+
+SELECTION-SCREEN END OF SCREEN 1001.
+"==============================================================================
+
+
+
+"==============================================================================
+"Initialization
+"==============================================================================
+
+INITIALIZATION.
+
+  "==============================================================================
+  CREATE OBJECT go_container
+    EXPORTING
+      container_name              = 'CONTAINER'
+    EXCEPTIONS
+      cntl_error                  = 1
+      cntl_system_error           = 2
+      create_error                = 3
+      lifetime_error              = 4
+      lifetime_dynpro_dynpro_link = 5
+      OTHERS                      = 6.
+
+  IF sy-subrc <> 0.
+    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+  ENDIF.
+  "==============================================================================
+
+  "==============================================================================
+  CREATE OBJECT go_container_dest
+    EXPORTING
+      container_name              = 'CONTAINER_DEST'
+    EXCEPTIONS
+      cntl_error                  = 1
+      cntl_system_error           = 2
+      create_error                = 3
+      lifetime_error              = 4
+      lifetime_dynpro_dynpro_link = 5
+      OTHERS                      = 6.
+
+  IF sy-subrc <> 0.
+    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+  ENDIF.
+  "==============================================================================
+
+
+
+
+  "==============================================================================
+  CREATE OBJECT go_transports.
+
+  IF go_transports IS BOUND.
+    TRY.
+        CALL METHOD go_transports->initialize
+          EXPORTING
+            io_container      = go_container
+            io_container_dest = go_container_dest.
+
+      CATCH zcx_transports INTO go_err.
+        gv_err = go_err->get_text( ).
+        MESSAGE gv_err TYPE 'E'.
+    ENDTRY.
+  ENDIF.
+  "==============================================================================
+
+AT SELECTION-SCREEN OUTPUT.
+  PERFORM set_screen_elements.
+
+
+START-OF-SELECTION.
+
+  CALL SCREEN 100.
+
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_ALL  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE status_all OUTPUT.
+  SET PF-STATUS '100'.
+  SET TITLEBAR '100'.
+
+ENDMODULE.                 " STATUS_ALL  OUTPUT
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_ALL  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_all INPUT.
+
+  DATA:
+    lv_msgtype TYPE msgty.                                  "#EC *
+
+  lv_msgtype = 'I'.
+
+  gv_okcode = okcode.
+  CLEAR okcode.
+
+  TRY.
+
+      CASE gv_okcode.
+
+        WHEN 'OUT'.
+          CALL METHOD go_transports->change_mode
+            EXPORTING
+              iv_outstanding = p_out.
+
+        WHEN 'ALV' OR 'STA'.
+          CALL METHOD go_transports->change_display
+            EXPORTING
+              iv_dependency_as_alv = p_alv
+              iv_status_display    = p_sta.
+
+        WHEN OTHERS.
+          CALL METHOD go_transports->pai
+            EXPORTING
+              iv_okcode     = gv_okcode
+              it_transports = s_trkorr[]
+              it_users      = s_user[].
+
+      ENDCASE.
+
+    CATCH zcx_transports INTO go_err.
+      gv_err = go_err->get_text( ).
+      MESSAGE gv_err TYPE lv_msgtype.
+
+  ENDTRY.
+
+ENDMODULE.                 " USER_COMMAND_ALL  INPUT
+
+" SEARCH_HELP_RFCDES
+*&---------------------------------------------------------------------*
+*&      Form  SET_SCREEN_ELEMENTS
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM set_screen_elements .
+
+  LOOP AT SCREEN.
+
+    IF screen-group1 = 'G1'.
+*      IF sy-uname = 'HASTEYN'.
+*        screen-active = 1.
+*        MODIFY SCREEN.
+*      ELSE.
+      screen-active = 0.
+      MODIFY SCREEN.
+*      ENDIF.
+    ENDIF.
+
+  ENDLOOP.
+
+ENDFORM.                    " SET_SCREEN_ELEMENTS
