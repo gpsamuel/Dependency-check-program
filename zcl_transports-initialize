@@ -1,0 +1,33 @@
+  METHOD initialize.
+
+    DATA:
+      ls_field TYPE rfc_db_fld.
+
+    mv_check_outstanding  = abap_false.
+    mv_dependency_as_alv  = abap_true.
+
+    ls_field-fieldname = scv_fld_trkorr.
+    APPEND ls_field TO mt_fields.
+
+    CALL FUNCTION 'TR_OBJECT_TABLE'
+      TABLES
+        wt_object_text = mt_transport_object.
+
+    CALL METHOD me->create_screen_objects
+      EXPORTING
+        io_container      = io_container
+        io_container_dest = io_container_dest.
+
+    CALL METHOD me->get_rfc_lookup_data.
+    CALL METHOD me->refresh_lookup_alv.
+
+    SET HANDLER me->on_hotspot_click_outstanding FOR mo_alv_outstanding .
+    SET HANDLER me->on_handle_toolbar FOR mo_alv_outstanding.
+    SET HANDLER me->on_handle_user_command FOR mo_alv_outstanding.
+    SET HANDLER me->on_handle_after_user_command FOR mo_alv_outstanding.
+
+    CALL METHOD me->get_icons.
+
+    CALL METHOD me->set_object_ranges.
+
+  ENDMETHOD.
