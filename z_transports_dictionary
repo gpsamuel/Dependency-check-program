@@ -1,0 +1,12 @@
+Table types
+ZRFCDEST_TT - Table Type for ZRFCDEST_S
+Line type - ZRFCDEST_S
+
+Structure
+ZRFCDEST_S - Structure for RFCDEST
+SYSID|1 Types|SYSYSID|CHAR|8|0|Name of SAP System
+RFCDEST|1 Types|RFCDEST|CHAR|32|0|Destination (Specified in Function Call)
+DDTEXT|1 Types|DDTEXT|CHAR|60|0|Explanatory short text
+CONTROLLER|1 Types|ZIS_CONTROLLER|CHAR|1|0|Indicates controlling system
+CHECKBOX|1 Types|CHAR1|CHAR|1|0|Single-Character Indicator
+CELLTAB|1 Types|LVC_T_STYL|0|0|ALV Control: Style Table for Cells
