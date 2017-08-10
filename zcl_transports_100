@@ -1,0 +1,17 @@
+process before output.
+
+  module status_all.
+
+  call subscreen ss_select      including sy-repid '1001'.
+  call subscreen ss_dest_select including sy-repid '1002'.
+  call subscreen ss_transports  including sy-repid '2000'.
+
+process after input.
+
+  module cancel at exit-command.                            "#EC *
+
+  call subscreen ss_select.
+  call subscreen ss_dest_select.
+  call subscreen ss_transports.
+
+  module user_command_all.
