@@ -1,0 +1,6 @@
+PROCESS BEFORE OUTPUT.
+  "module status_all.
+
+process after input.
+
+  "module user_command_all.
